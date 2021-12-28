@@ -12,10 +12,11 @@ namespace ConcurrencyAnalyzers
         {
             if (args.Length == 0)
             {
-                // A local testing scenario
+                // A local testing scenario. Will work if the integration tests ran at least once.
                 var dumpFileOptions = new ProcessDumpOptions()
                 {
-                    DumpFile = @"C:\Sources\GitHub\ConcurrencyAnalyzers2\Dumps\ParallelForBlocked2.dmp",
+                    DumpFile = @"..\..\..\..\ConcurrencyAnalyzers.IntegrationTests\bin\Debug\net6.0\Dumps\ParallelThreadsIntegrationTests.ParallelForBlockedOnLock.dmp",
+                    DiscoverThreadNames = true,
                 };
                 
                 Analyze(dumpFileOptions);
@@ -64,7 +65,7 @@ namespace ConcurrencyAnalyzers
                 ThreadRegistry? threadRegistry = null;
                 if (options.DiscoverThreadNames || options.StopAfterThreadNameDiscovery)
                 {
-                    threadRegistry = ThreadRegistry.Create(runtime.Runtime, options.DegreeOfParallelism ?? 4);
+                    threadRegistry = ThreadRegistry.Create(runtime.Runtime, options.DegreeOfParallelism);
                 }
 
                 Console.WriteLine("Discovered thread names");

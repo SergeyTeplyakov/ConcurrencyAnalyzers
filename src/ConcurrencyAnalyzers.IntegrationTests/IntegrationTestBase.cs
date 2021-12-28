@@ -17,8 +17,9 @@ public class IntegrationTestBase : RedirectingConsoleTest
 
     private static ParallelThreads GetParallelThreadsForCurrentProcess()
     {
-        using TargetWithRuntime targetWithRuntime = ConcurrencyAnalyzer.AttachTo(Environment.ProcessId).GetValueOrThrow();
-        var threadRegistry = ThreadRegistry.Create(targetWithRuntime.Runtime, Environment.ProcessorCount);
+        int processId = Process.GetCurrentProcess().Id;
+        using TargetWithRuntime targetWithRuntime = ConcurrencyAnalyzer.AttachTo(processId).GetValueOrThrow();
+        var threadRegistry = ThreadRegistry.Create(targetWithRuntime.Runtime, degreeOfParallelism: null);
         return ConcurrencyAnalyzer.AnalyzeParallelThreads(targetWithRuntime.Runtime, threadRegistry);
     }
 

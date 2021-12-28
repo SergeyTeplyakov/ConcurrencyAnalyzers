@@ -53,6 +53,7 @@ public static class StackFrameSanitizer
             return fullSignature;
         }
             
+        
         var simplifiedSignature = PrettifySignature(signature);
 
         SplitFullName(simplifiedSignature, out type, out method);

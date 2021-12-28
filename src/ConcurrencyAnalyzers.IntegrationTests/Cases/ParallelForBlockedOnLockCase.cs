@@ -16,11 +16,6 @@ public class ParallelForBlockedOnLockCase
         // Detaching from the calling thread since the ForEachAsync is actually a blocking call.
         await Task.Yield();
         var source = Enumerable.Range(1, 1000);
-        var options = new ParallelOptions()
-        {
-            MaxDegreeOfParallelism = threadCount,
-        };
-
         source.AsParallel().WithDegreeOfParallelism(threadCount).Select(n => LongRunningAndBlockingTask<int>(n, token)).ToList();
     }
 

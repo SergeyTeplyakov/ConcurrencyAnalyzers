@@ -9,14 +9,18 @@ using Microsoft.Diagnostics.Runtime;
 
 namespace ConcurrencyAnalyzers;
 
-public record EnumerateObjectsProgress(long TotalObjectCount, double DiscoveryRatePerSecond, long RelevantObjects);
+public record EnumerateObjectsProgress(long TotalObjectCount, double DiscoveryRatePerSecond, long RelevantObjectsCount);
 
 /// <summary>
 /// Helper class for enumerating objects faster.
 /// </summary>
 public class ObjectRetriever
 {
-    public static IEnumerable<ClrObject> EnumerateObjects(ClrRuntime runtime, Func<ClrObject, bool> objectSelector, int degreeOfParallelism, Action<EnumerateObjectsProgress>? progressReporter = null)
+    public static IEnumerable<ClrObject> EnumerateObjects(
+        ClrRuntime runtime, 
+        Func<ClrObject, bool> objectSelector, 
+        int degreeOfParallelism, 
+        Action<EnumerateObjectsProgress>? progressReporter = null)
     {
         // TODO: still checking if parallel processing is worth it! It seems that on hdd it gives the same results actually!
         if (!runtime.IsThreadSafe)
@@ -26,6 +30,7 @@ public class ObjectRetriever
             // return runtime.Heap.EnumerateObjects();
         }
 
+        // TODO: trace properly.
         Console.WriteLine($"Segments: {runtime.Heap.Segments.Length}, DoP: {degreeOfParallelism}, GCMode: {(GCSettings.IsServerGC ? "Server" : "Workstation")}");
 
         var blockingCollection = new BlockingCollection<ClrObject>();
@@ -38,24 +43,7 @@ public class ObjectRetriever
         {
             cts = new CancellationTokenSource();
 
-            var reportingTask = Task.Run(async () =>
-            {
-                var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-                while (!cts.IsCancellationRequested)
-                {
-                    long previousDiscoveredObjectsCount = Interlocked.Read(ref discoveredObjectsCount);
-
-                    if (await periodicTimer.WaitForNextTickAsync(cts.Token))
-                    {
-                        long currentCount = Interlocked.Read(ref discoveredObjectsCount);
-
-                        var rate = currentCount - previousDiscoveredObjectsCount;
-                        previousDiscoveredObjectsCount = currentCount;
-                        progressReporter(new EnumerateObjectsProgress(currentCount, rate, Interlocked.Read(ref relevantObjectsCount)));
-                    }
-
-                }
-            });
+            StartReporter(cts.Token);
         }
 
         var enumerateTask = Task.Factory.StartNew(() =>
@@ -100,6 +88,7 @@ public class ObjectRetriever
 
         if (cts is not null)
         {
+            // Enumeration is done. Cancelling reporting if its running.
             enumerateTask.ContinueWith(_ =>
             {
                 cts.Cancel();
@@ -109,6 +98,27 @@ public class ObjectRetriever
         foreach (var clrObject in blockingCollection.GetConsumingEnumerable())
         {
             yield return clrObject;
+        }
+
+        void StartReporter(CancellationToken token)
+        {
+            Task.Run(async () =>
+            {
+                var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+                long previousDiscoveredObjectsCount = Interlocked.Read(ref discoveredObjectsCount);
+                
+                while (!token.IsCancellationRequested)
+                {
+                    if (await periodicTimer.WaitForNextTickAsync(token))
+                    {
+                        long currentCount = Interlocked.Read(ref discoveredObjectsCount);
+
+                        var rate = currentCount - previousDiscoveredObjectsCount;
+                        previousDiscoveredObjectsCount = currentCount;
+                        progressReporter(new EnumerateObjectsProgress(currentCount, rate, Interlocked.Read(ref relevantObjectsCount)));
+                    }
+                }
+            });
         }
     }
 }

@@ -245,7 +245,7 @@ public sealed class SingleParallelThread : ParallelThread
             name = $" ({singleThread.ThreadId.Name})";
         }
 
-        Header = $"Thread #{singleThread.ThreadId.ManagedId}{name}";
+        Header = $"Thread #{singleThread.ThreadId.ManagedId} (OsId: #{singleThread.ThreadId.OsId}){name}";
         Body = ThreadInfoToString(singleThread);
     }
 }
