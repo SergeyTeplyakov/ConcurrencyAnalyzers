@@ -18,8 +18,8 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore .\src\ConcurrencyAnalyzers.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build .\src\ConcurrencyAnalyzers.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test .\src\ConcurrencyAnalyzers.sln --no-build
