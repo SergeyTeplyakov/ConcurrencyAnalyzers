@@ -42,27 +42,24 @@ public class ThreadRegistry : IThreadRegistry
         _threadNames.TryGetValue(managedThreadId, out var result);
         return result;
     }
-    
+
     public static ThreadRegistry Create(ClrRuntime runtime, int? degreeOfParallelism)
     {
-        // it seems that 4-6 threads gives the best throughput.
-        int dop = degreeOfParallelism ?? 5;
         var activeThreads = runtime.Threads.Where(t => t.IsAlive).Select(t => t.ManagedThreadId).ToHashSet();
         var dictionary = new Dictionary<int, string?>();
 
         // TODO: use proper logging.
         var sw = Stopwatch.StartNew();
-        Console.WriteLine($"Discovering ClrThreads with {degreeOfParallelism} threads...");
-        var threads = ObjectRetriever.EnumerateObjects(runtime,
-            clrObject =>
-            {
-                return clrObject.Type?.Name == "System.Threading.Thread";
-            },
-            degreeOfParallelism: dop,
+
+        var objectsRetriever = new ObjectsRetriever(
+            degreeOfParallelism,
             progress =>
             {
-                Console.WriteLine($"Processed {progress.TotalObjectCount}, rate: {progress.DiscoveryRatePerSecond}ops, Relevant Objects: {progress.RelevantObjectsCount}.");
+                Console.WriteLine(
+                    $"Processed {progress.TotalObjectCount}, rate: {progress.DiscoveryRatePerSecond}ops, Relevant Objects: {progress.RelevantObjectsCount}.");
             });
+
+        var threads = objectsRetriever.EnumerateThreads(runtime);
 
         foreach (var threadObject in threads)
         {

@@ -68,10 +68,8 @@ namespace ConcurrencyAnalyzers
                     threadRegistry = ThreadRegistry.Create(runtime.Runtime, options.DegreeOfParallelism);
                 }
 
-                Console.WriteLine("Discovered thread names");
                 if (options.StopAfterThreadNameDiscovery)
                 {
-                    Console.WriteLine("done!");
                     // The goal of this invocation was to discover threads.
                     return Unit.VoidSuccess;
                 }

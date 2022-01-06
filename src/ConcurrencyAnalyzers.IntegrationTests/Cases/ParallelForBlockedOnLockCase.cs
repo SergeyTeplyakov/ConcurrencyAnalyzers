@@ -7,6 +7,7 @@ namespace ConcurrencyAnalyzers.IntegrationTests;
 
 #nullable disable
 
+// The code looks weird just to check that the tool can 'decrypt' the stack traces properly.
 public class ParallelForBlockedOnLockCase
 {
     private static readonly object _globalSyncLock = new object();
@@ -16,7 +17,8 @@ public class ParallelForBlockedOnLockCase
         // Detaching from the calling thread since the ForEachAsync is actually a blocking call.
         await Task.Yield();
         var source = Enumerable.Range(1, 1000);
-        source.AsParallel().WithDegreeOfParallelism(threadCount).Select(n => LongRunningAndBlockingTask<int>(n, token)).ToList();
+        source.AsParallel().WithDegreeOfParallelism(threadCount).Select(n => 
+            LongRunningAndBlockingTask<int>(n, token)).ToList();
     }
 
     private static Task<T> LongRunningAndBlockingTask<T>(int n, CancellationToken token)

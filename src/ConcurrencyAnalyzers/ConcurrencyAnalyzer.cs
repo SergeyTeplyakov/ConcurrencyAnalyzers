@@ -18,7 +18,6 @@ public record class TargetWithRuntime(DataTarget Target, ClrRuntime Runtime) : I
     }
 }
 
-
 // TODO: Analyzers should be like a set of decorators that we should be able to add to a chain of analysis?
 
 /// <summary>
@@ -158,5 +157,4 @@ public class ConcurrencyAnalyzer
     
     // TODO: use a full set of logging/tracing features! Like etw event source etc.
 }
-
 
