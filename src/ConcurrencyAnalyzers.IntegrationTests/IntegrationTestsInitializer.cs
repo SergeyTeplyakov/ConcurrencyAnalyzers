@@ -4,14 +4,15 @@ using Xunit;
 
 [assembly: CollectionBehavior(MaxParallelThreads = 1)]
 
-namespace ConcurrencyAnalyzers.IntegrationTests;
-
-public class IntegrationTestsInitializer
+namespace ConcurrencyAnalyzers.IntegrationTests
 {
-    [ModuleInitializer]
-    public static void Initialize()
+    public class IntegrationTestsInitializer
     {
-        // Setting a bit more threads then the default value of Environment.ProcessorCount
-        ThreadPool.SetMinThreads(50, 50);
+        [ModuleInitializer]
+        public static void Initialize()
+        {
+            // Setting a bit more threads then the default value of Environment.ProcessorCount
+            ThreadPool.SetMinThreads(50, 50);
+        }
     }
 }

@@ -1,85 +1,88 @@
 ﻿using System;
 
-namespace ConcurrencyAnalyzers;
+using ConcurrencyAnalyzers.Utilities;
 
-public static class StackFrameTokenizer
+namespace ConcurrencyAnalyzers
 {
-    /// <summary>
-    /// A fairly naive implementation that parses a type or a method name into tokens, like 'name' + 'separator' + 'name' etc.
-    /// For instance for 'a.b&lt;d,e&gt;' we'll get: token('a'), separator('.'), token('b'), separator('&lt;'), token(d), separator(','), token('e'), separator('&gt;').
-    /// </summary>
-    public static void TokenizeTypeOrMethodName(
-        ReadOnlySpan<char> typeOrMethodName, 
-        char[] tokens,
-        Action<(string token, bool isSeparator)> handler)
+    public static class StackFrameTokenizer
     {
-        // Super naive but its fine!
-        foreach (var itemRange in typeOrMethodName.SplitAny(tokens))
+        /// <summary>
+        /// A fairly naive implementation that parses a type or a method name into tokens, like 'name' + 'separator' + 'name' etc.
+        /// For instance for 'a.b&lt;d,e&gt;' we'll get: token('a'), separator('.'), token('b'), separator('&lt;'), token(d), separator(','), token('e'), separator('&gt;').
+        /// </summary>
+        public static void TokenizeTypeOrMethodName(
+            ReadOnlySpan<char> typeOrMethodName,
+            char[] tokens,
+            Action<(string token, bool isSeparator)> handler)
         {
-            var item = typeOrMethodName.Slice(itemRange);
-            handler((token: item.ToString(), isSeparator: false));
-
-            if (typeOrMethodName.Length > itemRange.End.Value)
+            // Super naive but its fine!
+            foreach (var itemRange in typeOrMethodName.SplitAny(tokens))
             {
-                handler((token: typeOrMethodName[itemRange.End.Value].ToString(), isSeparator: true));
-            }
-        }
-    }
+                var item = typeOrMethodName.Slice(itemRange);
+                handler((token: item.ToString(), isSeparator: false));
 
-    /// <summary>
-    /// A fairly naive implementation that parses a full argument list into a set of arguments.
-    /// </summary>
-    /// <remarks>
-    /// An expected format is: 'ref TypeName', or 'TypeName'
-    /// </remarks>
-    public static void TokenizeArgumentList(
-        ReadOnlySpan<char> arguments,
-        char[] nameSeparators,
-        Action<(string token, bool isSeparator, bool isModifier)> handler)
-    {
-        bool first = true;
-        foreach (var itemRange in arguments.Split(","))
-        {
-            if (!first)
-            {
-                handler((token: ", ", isSeparator: true, isModifier: false));
-            }
-
-            first = false;
-
-            var item = arguments.Slice(itemRange).Trim(' ');
-            if (item.Contains(' '))
-            {
-                int position = 0;
-                // item is: 'ref A.B.C'.
-                foreach (var argRange in item.Split(' '))
+                if (typeOrMethodName.Length > itemRange.End.Value)
                 {
-                    var arg = item.Slice(argRange);
-                    if (position == 0)
-                    {
-                        // this is 'ref'
-                        handler((token: arg.ToString(), isSeparator: false, isModifier: true));
-                        handler((token: " ", isSeparator: true, isModifier: false));
-                    }
-                    else
-                    {
-                        TokenizeTypeOrMethodName(arg, nameSeparators,
-                            tpl =>
-                            {
-                                handler((token: tpl.token, isSeparator: tpl.isSeparator, isModifier: false));
-                            });
-                    }
-
-                    position++;
+                    handler((token: typeOrMethodName[itemRange.End.Value].ToString(), isSeparator: true));
                 }
             }
-            else
+        }
+
+        /// <summary>
+        /// A fairly naive implementation that parses a full argument list into a set of arguments.
+        /// </summary>
+        /// <remarks>
+        /// An expected format is: 'ref TypeName', or 'TypeName'
+        /// </remarks>
+        public static void TokenizeArgumentList(
+            ReadOnlySpan<char> arguments,
+            char[] nameSeparators,
+            Action<(string token, bool isSeparator, bool isModifier)> handler)
+        {
+            bool first = true;
+            foreach (var itemRange in arguments.Split(","))
             {
-                TokenizeTypeOrMethodName(item, nameSeparators,
-                    tpl =>
+                if (!first)
+                {
+                    handler((token: ", ", isSeparator: true, isModifier: false));
+                }
+
+                first = false;
+
+                var item = arguments.Slice(itemRange).Trim(' ');
+                if (item.Contains(' '))
+                {
+                    int position = 0;
+                    // item is: 'ref A.B.C'.
+                    foreach (var argRange in item.Split(' '))
                     {
-                        handler((token: tpl.token, isSeparator: tpl.isSeparator, isModifier: false));
-                    });
+                        var arg = item.Slice(argRange);
+                        if (position == 0)
+                        {
+                            // this is 'ref'
+                            handler((token: arg.ToString(), isSeparator: false, isModifier: true));
+                            handler((token: " ", isSeparator: true, isModifier: false));
+                        }
+                        else
+                        {
+                            TokenizeTypeOrMethodName(arg, nameSeparators,
+                                tpl =>
+                                {
+                                    handler((token: tpl.token, isSeparator: tpl.isSeparator, isModifier: false));
+                                });
+                        }
+
+                        position++;
+                    }
+                }
+                else
+                {
+                    TokenizeTypeOrMethodName(item, nameSeparators,
+                        tpl =>
+                        {
+                            handler((token: tpl.token, isSeparator: tpl.isSeparator, isModifier: false));
+                        });
+                }
             }
         }
     }

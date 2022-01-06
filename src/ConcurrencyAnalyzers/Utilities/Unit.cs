@@ -1,10 +1,11 @@
-﻿namespace ConcurrencyAnalyzers;
-
-public class Unit
+﻿namespace ConcurrencyAnalyzers.Utilities
 {
-    private Unit() {}
+    public class Unit
+    {
+        private Unit() { }
 
-    public static Unit Void { get; } = new Unit();
+        public static Unit Void { get; } = new Unit();
 
-    public static Result<Unit> VoidSuccess { get; } = Result.Success(Void);
+        public static Result<Unit> VoidSuccess { get; } = Result.Success(Void);
+    }
 }

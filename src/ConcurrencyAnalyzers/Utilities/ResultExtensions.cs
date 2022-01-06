@@ -1,22 +1,23 @@
 ﻿using System.Diagnostics;
 
-namespace ConcurrencyAnalyzers;
-
-public static class ResultExtensions
+namespace ConcurrencyAnalyzers.Utilities
 {
-    public static void ThrowIfFailure<TResult>(this TResult result) where TResult : IResult
+    public static class ResultExtensions
     {
-        if (!result.Success)
+        public static void ThrowIfFailure<TResult>(this TResult result) where TResult : IResult
         {
-            throw new UnsuccessfulResultException(result.ErrorMessage);
+            if (!result.Success)
+            {
+                throw new UnsuccessfulResultException(result.ErrorMessage);
+            }
         }
-    }
 
-    public static T GetValueOrThrow<T>(this Result<T> result)
-    {
-        result.ThrowIfFailure();
-        
-        Debug.Assert(result.Success);
-        return result.Value;
+        public static T GetValueOrThrow<T>(this Result<T> result)
+        {
+            result.ThrowIfFailure();
+
+            Debug.Assert(result.Success);
+            return result.Value;
+        }
     }
 }

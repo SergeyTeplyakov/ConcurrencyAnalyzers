@@ -1,31 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ConcurrencyAnalyzers;
-
-internal static class EnumerableExtensions
+namespace ConcurrencyAnalyzers.Utilities
 {
-    public static Dictionary<TKey, List<TValue>> ToMultiDictionary<TSource, TKey, TValue>(
-        this IEnumerable<TSource> source,
-        Func<TSource, TKey> keySelector,
-        Func<TSource, TValue> valueSelector,
-        IEqualityComparer<TKey>? comparer = null) where TKey: notnull
+    internal static class EnumerableExtensions
     {
-        var result = new Dictionary<TKey, List<TValue>>(comparer);
-
-        foreach (var item in source)
+        public static Dictionary<TKey, List<TValue>> ToMultiDictionary<TSource, TKey, TValue>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            Func<TSource, TValue> valueSelector,
+            IEqualityComparer<TKey>? comparer = null) where TKey : notnull
         {
-            var key = keySelector(item);
+            var result = new Dictionary<TKey, List<TValue>>(comparer);
 
-            if (!result.TryGetValue(key, out var list))
+            foreach (var item in source)
             {
-                list = new List<TValue>();
-                result[key] = list;
+                var key = keySelector(item);
+
+                if (!result.TryGetValue(key, out var list))
+                {
+                    list = new List<TValue>();
+                    result[key] = list;
+                }
+
+                list.Add(valueSelector(item));
             }
 
-            list.Add(valueSelector(item));
+            return result;
         }
-
-        return result;
     }
 }

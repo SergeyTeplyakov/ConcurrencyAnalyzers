@@ -2,19 +2,20 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ConcurrencyAnalyzers.IntegrationTests;
-
-public static class SafeDelay
+namespace ConcurrencyAnalyzers.IntegrationTests
 {
-    public static async Task Delay(TimeSpan delay, CancellationToken token)
+    public static class SafeDelay
     {
-        try
+        public static async Task Delay(TimeSpan delay, CancellationToken token)
         {
-            await Task.Delay(delay, token);
-        }
-        catch (TaskCanceledException)
-        {
+            try
+            {
+                await Task.Delay(delay, token);
+            }
+            catch (TaskCanceledException)
+            {
 
+            }
         }
     }
 }

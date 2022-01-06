@@ -1,14 +1,15 @@
-﻿namespace ConcurrencyAnalyzers;
-
-public static class NullableValueTypesExtensions
+﻿namespace ConcurrencyAnalyzers.Utilities
 {
-    public static (T value, bool hasValue) ToTuple<T>(this T? value) where T : struct
+    public static class NullableValueTypesExtensions
     {
-        if (value is null)
+        public static (T value, bool hasValue) ToTuple<T>(this T? value) where T : struct
         {
-            return (value: default, hasValue: false);
-        }
+            if (value is null)
+            {
+                return (value: default, hasValue: false);
+            }
 
-        return (value: value.Value, hasValue: true);
+            return (value: value.Value, hasValue: true);
+        }
     }
 }

@@ -1,24 +1,25 @@
 ﻿using System;
 using System.Threading;
 
-namespace ConcurrencyAnalyzers.IntegrationTests;
-
-public class ExceptionInsideTheLockCase
+namespace ConcurrencyAnalyzers.IntegrationTests
 {
-    public static void BlockingMethodWithLockAndException(Exception exception, CancellationToken token)
+    public class ExceptionInsideTheLockCase
     {
-        object o = new object();
-        lock (o)
+        public static void BlockingMethodWithLockAndException(Exception exception, CancellationToken token)
         {
-            // For some reason when we attach to the running process, lock count is not properly available, but exceptions are!
-            try
+            object o = new object();
+            lock (o)
             {
-                throw exception;
-            }
-            catch (Exception)
-            {
-                // Blocking the exception handling block to see the exception in one of the stacks.
-                SafeDelay.Delay(TimeSpan.FromSeconds(42), token).GetAwaiter().GetResult();
+                // For some reason when we attach to the running process, lock count is not properly available, but exceptions are!
+                try
+                {
+                    throw exception;
+                }
+                catch (Exception)
+                {
+                    // Blocking the exception handling block to see the exception in one of the stacks.
+                    SafeDelay.Delay(TimeSpan.FromSeconds(42), token).GetAwaiter().GetResult();
+                }
             }
         }
     }
