@@ -3,7 +3,6 @@ using System.Threading;
 
 namespace ConcurrencyAnalyzers.IntegrationTests;
 
-
 public class ExceptionInsideTheLockCase
 {
     public static void BlockingMethodWithLockAndException(Exception exception, CancellationToken token)

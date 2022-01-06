@@ -42,9 +42,9 @@ public class ProcessDumpOptions : VerbOptions
 [Verb("attach", HelpText = "Options for attaching to a running process.")]
 public class AttachOptions : VerbOptions
 {
-    [Option('i', "processId", Group = "ProcessId", Required = false, HelpText = "The Id of the process used for live analysis.")]
+    [Option('i', "processId", Group = "Attach", Required = false, HelpText = "The Id of the process used for live analysis.")]
     public int? ProcessId { get; set; }
 
-    [Option('n', "processName", Group = "ProcessName", Required = false, HelpText = "The name of the process used for live analysis.")]
+    [Option('a', "processName", Group = "Attach", Required = false, HelpText = "The name of the process used for live analysis.")]
     public string? ProcessName { get; set; }
 }

@@ -108,7 +108,6 @@ public class TypeNameHelperTests
         prettified.ToString().Should().Be(expected);
     }
 
-
     private void TraceResultsAndValidate(string original, ReadOnlySpan<char> prettified, string expected)
     {
         _helper.WriteLine($"  Original:\r\n{original}");

@@ -68,7 +68,6 @@ public class ProcessDumper
         }
     }
 
-
     [DllImport("dbghelp.dll", EntryPoint = "MiniDumpWriteDump", CallingConvention = CallingConvention.StdCall,
         CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

@@ -385,5 +385,3 @@ public static class StackFrameSanitizer
         return signature.Length != fullSignature.Length;
     }
 }
-
-
