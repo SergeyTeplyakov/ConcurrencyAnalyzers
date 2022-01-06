@@ -3,77 +3,80 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace ConcurrencyAnalyzers;
+using ConcurrencyAnalyzers.Utilities;
 
-/// <summary>
-/// A helper class for converting <code>System.Int32</code> names to <code>int</code>.
-/// </summary>
-public static class PredefinedTypesSimplifier
+namespace ConcurrencyAnalyzers
 {
-    private static readonly Dictionary<string, string> PredefinedTypeMap = new Dictionary<string, string>()
+    /// <summary>
+    /// A helper class for converting <code>System.Int32</code> names to <code>int</code>.
+    /// </summary>
+    public static class PredefinedTypesSimplifier
     {
-        ["Object"] = "object",
-        ["Boolean"] = "bool",
-        ["Char"] = "char",
-        ["SByte"] = "sbyte",
-        ["Byte"] = "byte",
-        ["Int16"] = "short",
-        ["UInt16"] = "ushort",
-        ["Int32"] = "int",
-        ["UInt32"] = "uint",
-        ["Int64"] = "long",
-        ["UInt64"] = "ulong",
-        ["Single"] = "float",
-        ["Double"] = "double",
-        ["Decimal"] = "decimal",
-        ["String"] = "string",
-    };
-
-    private static readonly Dictionary<string, string> PredefinedTypeMapWithSystemPrefix = PredefinedTypeMap.ToDictionary(kvp => $"System.{kvp.Key}", kvp => kvp.Value);
-
-    public static bool TrySimplify(ReadOnlySpan<char> typeName, [NotNullWhen(true)]out string? predefinedType)
-    {
-        // Trading speed over allocations.
-        // We have dictionaries, but using sequential search, because we can't use 'Span<char>' directly to lookup the values.
-
-        if (typeName.StartsWith("System."))
+        private static readonly Dictionary<string, string> s_predefinedTypeMap = new Dictionary<string, string>()
         {
-            foreach(var (key, value) in PredefinedTypeMapWithSystemPrefix)
+            ["Object"] = "object",
+            ["Boolean"] = "bool",
+            ["Char"] = "char",
+            ["SByte"] = "sbyte",
+            ["Byte"] = "byte",
+            ["Int16"] = "short",
+            ["UInt16"] = "ushort",
+            ["Int32"] = "int",
+            ["UInt32"] = "uint",
+            ["Int64"] = "long",
+            ["UInt64"] = "ulong",
+            ["Single"] = "float",
+            ["Double"] = "double",
+            ["Decimal"] = "decimal",
+            ["String"] = "string",
+        };
+
+        private static readonly Dictionary<string, string> s_predefinedTypeMapWithSystemPrefix = s_predefinedTypeMap.ToDictionary(kvp => $"System.{kvp.Key}", kvp => kvp.Value);
+
+        public static bool TrySimplify(ReadOnlySpan<char> typeName, [NotNullWhen(true)] out string? predefinedType)
+        {
+            // Trading speed over allocations.
+            // We have dictionaries, but using sequential search, because we can't use 'Span<char>' directly to lookup the values.
+
+            if (typeName.StartsWith("System."))
             {
-                // See the comment inside EqualsInvariant
-                if (typeName.EqualsInvariant(key))
+                foreach (var (key, value) in s_predefinedTypeMapWithSystemPrefix)
                 {
-                    predefinedType = value;
-                    return true;
+                    // See the comment inside EqualsInvariant
+                    if (typeName.EqualsInvariant(key))
+                    {
+                        predefinedType = value;
+                        return true;
+                    }
                 }
             }
-        }
-        else
-        {
-            foreach (var (key, value) in PredefinedTypeMap)
+            else
             {
-                // See the comment inside EqualsInvariant
-                if (typeName.EqualsInvariant(key))
+                foreach (var (key, value) in s_predefinedTypeMap)
                 {
-                    predefinedType = value;
-                    return true;
+                    // See the comment inside EqualsInvariant
+                    if (typeName.EqualsInvariant(key))
+                    {
+                        predefinedType = value;
+                        return true;
+                    }
                 }
             }
+
+            predefinedType = null;
+            return false;
         }
 
-        predefinedType = null;
-        return false;
-    }
+        public static bool IsPredefinedType(ReadOnlySpan<char> typeName) => TrySimplify(typeName, out _);
 
-    public static bool IsPredefinedType(ReadOnlySpan<char> typeName) => TrySimplify(typeName, out _);
-
-    public static ReadOnlySpan<char> SimplifyTypeNameIfPossible(ReadOnlySpan<char> typeName)
-    {
-        if (TrySimplify(typeName, out var simplified))
+        public static ReadOnlySpan<char> SimplifyTypeNameIfPossible(ReadOnlySpan<char> typeName)
         {
-            return simplified;
-        }
+            if (TrySimplify(typeName, out var simplified))
+            {
+                return simplified;
+            }
 
-        return typeName;
+            return typeName;
+        }
     }
 }

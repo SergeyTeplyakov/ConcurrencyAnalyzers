@@ -1,10 +1,11 @@
 ﻿using System;
 
-namespace ConcurrencyAnalyzers;
-
-public class UnsuccessfulResultException : Exception
+namespace ConcurrencyAnalyzers.Utilities
 {
-    public UnsuccessfulResultException(string? message) : base(message)
+    public class UnsuccessfulResultException : Exception
     {
+        public UnsuccessfulResultException(string? message) : base(message)
+        {
+        }
     }
 }

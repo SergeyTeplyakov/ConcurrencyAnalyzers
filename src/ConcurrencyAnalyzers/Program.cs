@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using CommandLine;
 using CommandLine.Text;
+
+using ConcurrencyAnalyzers.Rendering;
+using ConcurrencyAnalyzers.Utilities;
+
 using Microsoft.Diagnostics.Runtime;
 
 namespace ConcurrencyAnalyzers
@@ -18,7 +22,7 @@ namespace ConcurrencyAnalyzers
                     DumpFile = @"..\..\..\..\ConcurrencyAnalyzers.IntegrationTests\bin\Debug\net6.0\Dumps\ParallelThreadsIntegrationTests.ParallelForBlockedOnLock.dmp",
                     DiscoverThreadNames = true,
                 };
-                
+
                 Analyze(dumpFileOptions);
                 return;
             }
@@ -49,11 +53,11 @@ namespace ConcurrencyAnalyzers
             CacheOptions? cacheOptions = options is ProcessDumpOptions { DisableCaching: true } ? DisabledCacheOptions() : null;
 
             var (runtime, error) = options switch
-                {
-                    ProcessDumpOptions pdo => ConcurrencyAnalyzer.OpenDump(pdo.DumpFile!, pdo.DacFilePath, cacheOptions),
-                    AttachOptions ao => ao.ProcessId is {} pid ? ConcurrencyAnalyzer.AttachTo(pid) : ConcurrencyAnalyzer.AttachTo(ao.ProcessName.AssertNotNull()),
-                    _ => throw new InvalidOperationException($"Unknown options {options.GetType()}"),
-                };
+            {
+                ProcessDumpOptions pdo => ConcurrencyAnalyzer.OpenDump(pdo.DumpFile!, pdo.DacFilePath, cacheOptions),
+                AttachOptions ao => ao.ProcessId is { } pid ? ConcurrencyAnalyzer.AttachTo(pid) : ConcurrencyAnalyzer.AttachTo(ao.ProcessName.AssertNotNull()),
+                _ => throw new InvalidOperationException($"Unknown options {options.GetType()}"),
+            };
 
             if (error is not null)
             {
@@ -74,7 +78,6 @@ namespace ConcurrencyAnalyzers
                     return Unit.VoidSuccess;
                 }
 
-                
                 var parallelThreads = ConcurrencyAnalyzer.AnalyzeParallelThreads(runtime.Runtime, threadRegistry);
                 var render = CreateRenderer(options);
                 render.Render(parallelThreads);

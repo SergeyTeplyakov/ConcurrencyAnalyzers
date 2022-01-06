@@ -1,27 +1,30 @@
 ﻿using System.IO;
 
-namespace ConcurrencyAnalyzers;
-
-public class FileRenderer : TextRenderer
+namespace ConcurrencyAnalyzers.Rendering
 {
-    private readonly StreamWriter _streamWriter;
-
-    private FileRenderer(StreamWriter streamWriter, bool renderRawStackFrames, int maxWidth) : base(streamWriter, renderRawStackFrames, maxWidth)
+    public class FileRenderer : TextRenderer
     {
-        _streamWriter = streamWriter;
-    }
+        private readonly StreamWriter _streamWriter;
 
-    /// <inheritdoc />
-    public override void Dispose()
-    {
-        _streamWriter.Flush();
-        _streamWriter.Dispose();
-    }
+        private FileRenderer(StreamWriter streamWriter, bool renderRawStackFrames, int maxWidth) : base(streamWriter, renderRawStackFrames, maxWidth)
+        {
+            _streamWriter = streamWriter;
+        }
 
-    public static FileRenderer Create(string path, int maxWidth = 160)
-    {
-        var file = File.OpenWrite(path);
-        var writer = new StreamWriter(file, leaveOpen: false);
-        return new FileRenderer(writer, renderRawStackFrames: false, maxWidth);
+        /// <inheritdoc />
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            _streamWriter.Flush();
+            _streamWriter.Dispose();
+        }
+
+        public static FileRenderer Create(string path, int maxWidth = 160)
+        {
+            var file = File.OpenWrite(path);
+            var writer = new StreamWriter(file, leaveOpen: false);
+            return new FileRenderer(writer, renderRawStackFrames: false, maxWidth);
+        }
     }
 }
