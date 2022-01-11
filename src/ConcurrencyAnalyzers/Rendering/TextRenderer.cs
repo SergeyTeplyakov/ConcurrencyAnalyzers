@@ -4,7 +4,7 @@ using System.Diagnostics.ContractsLight;
 using System.IO;
 
 using ConcurrencyAnalyzers.ParallelThreadsAnalysis;
-
+using ConcurrencyAnalyzers.Utilities;
 using static ConcurrencyAnalyzers.Rendering.FragmentFactory;
 
 namespace ConcurrencyAnalyzers.Rendering
@@ -23,6 +23,7 @@ namespace ConcurrencyAnalyzers.Rendering
         Text,
         Argument,
         ArgumentModifier,
+        Warning,
     }
 
     public record OutputFragment(FragmentKind Kind, string Text);
@@ -57,6 +58,51 @@ namespace ConcurrencyAnalyzers.Rendering
 
         public virtual void Dispose() { }
 
+        public void Render(AnalysisResult result)
+        {
+            // TODO: print other stuff.
+            if (result.ThreadPoolStats is { } ts)
+            {
+                Render(ts);
+            }
+
+            if (result.ParallelThreads is { } pt)
+            {
+                if (pt.Success)
+                {
+                    Render(pt.Value);
+                }
+            }
+        }
+
+        public void Render(Result<ThreadPoolStats> stats)
+        {
+            RenderLineSeparator();
+            RenderLine("Thread Pool Statistics");
+            RenderLineSeparator();
+
+            if (stats.Success)
+            {
+                Render(stats.Value);
+            }
+            else
+            {
+                RenderLine(Fragment(FragmentKind.Warning, stats.ErrorMessage));
+            }
+
+            RenderLineSeparator();
+            RenderNewLine();
+        }
+
+        public void Render(ThreadPoolStats stats)
+        {
+            RenderLine(
+                Text($"Active: {stats.NumProcessingWork}"), Separator(", "),
+                Text($"Blocked: {stats.NumBlockedThreads}"), Separator(", "),
+                Text($"Threads: {stats.ThreadCount}/{stats.AvailableThreads}"), Separator(", "),
+                Text($"Memory Usage (bytes): {stats.MemoryUsageBytes}"));
+        }
+
         public void Render(ParallelThreads parallelThreads)
         {
             RenderOverview(parallelThreads);
@@ -69,8 +115,10 @@ namespace ConcurrencyAnalyzers.Rendering
         private void RenderOverview(ParallelThreads parallelThreads)
         {
             RenderLineSeparator();
+            RenderLine("Parallel Threads");
+            RenderLineSeparator();
             RenderLine(
-                Text($"Thread count: {parallelThreads.ThreadCount} "),
+                Text($"Thread count: {parallelThreads.ThreadCount}"), Separator(", "),
                 Text($"Unique stack traces: {parallelThreads.GroupedThreads.Length}"));
             RenderLineSeparator();
         }
@@ -80,6 +128,14 @@ namespace ConcurrencyAnalyzers.Rendering
             Contract.Requires(fragments.Length != 0);
 
             RenderLine(new OutputLine(fragments));
+        }
+
+        protected virtual void RenderLine(string text)
+        {
+            var prefixLength = (_maxWidth - text.Length - BorderWidth + 1) / 2;
+            var suffixLength = _maxWidth - text.Length - prefixLength - BorderWidth;
+            suffixLength = suffixLength < 0 ? 0 : suffixLength;
+            RenderLine(Text($"{new string(' ', prefixLength)}{text}{new string(' ', suffixLength)}"));
         }
 
         protected virtual void RenderLine(OutputLine line)
@@ -176,8 +232,7 @@ namespace ConcurrencyAnalyzers.Rendering
 
         protected virtual void RenderHeader(ParallelThread thread)
         {
-            RenderLineSeparator();
-            RenderLine(Fragment(FragmentKind.Header, thread.Header));
+            RenderLine(thread.Header);
             RenderLineSeparator();
         }
 

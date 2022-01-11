@@ -155,12 +155,61 @@ namespace ConcurrencyAnalyzers
             }
         }
 
+
         public static ParallelThreads AnalyzeParallelThreads(ClrRuntime runtime, ThreadRegistry? threadRegistry)
         {
             return ParallelThreads.Create(runtime, threadRegistry);
         }
 
         // TODO: use a full set of logging/tracing features! Like etw event source etc.
+
+        public static AnalysisResult Analyze(AnalysisOptions options, ClrRuntime runtime)
+        {
+            AnalysisResult result = new AnalysisResult();
+            if (options.Scope.HasFlag(AnalysisScope.ThreadPool))
+            {
+                result.ThreadPoolStats = ThreadPoolAnalyzer.TryAnalyzeThreadPoolStats(runtime);
+            }
+
+            if (options.Scope.HasFlag(AnalysisScope.Threads))
+            {
+                result.ThreadRegistry = ThreadRegistry.Create(runtime, options.DegreeOfParallelism);
+            }
+
+            if (options.Scope.HasFlag(AnalysisScope.ParallelThreads))
+            {
+                // TODO: add a try/catch block to avoid crashes.
+                result.ParallelThreads = Result.Success(AnalyzeParallelThreads(runtime, result.ThreadRegistry));
+            }
+
+            return result;
+        }
     }
+
+    [Flags]
+    public enum AnalysisScope
+    {
+        None = 0,
+        Threads = 1 << 1,
+        ParallelThreads = 1 << 2,
+        ThreadPool = 1 << 3,
+        Tasks = 1 << 4,
+        TasksCausality = 1 << 5,
+
+        All = Threads | ParallelThreads | ThreadPool | Tasks | TasksCausality,
+    }
+
+    public record AnalysisOptions(
+        AnalysisScope Scope,
+        int? DegreeOfParallelism);
+
+    public record AnalysisResult
+    {
+        public ThreadRegistry? ThreadRegistry { get; set; }
+        public Result<ParallelThreads>? ParallelThreads { get; set; }
+        public Result<ThreadPoolStats>? ThreadPoolStats { get; set; }
+    }
+
+
 }
 

@@ -19,7 +19,7 @@ namespace ConcurrencyAnalyzers
                 // A local testing scenario. Will work if the integration tests ran at least once.
                 var dumpFileOptions = new ProcessDumpOptions()
                 {
-                    DumpFile = @"..\..\..\..\ConcurrencyAnalyzers.IntegrationTests\bin\Debug\net6.0\Dumps\ParallelThreadsIntegrationTests.ParallelForBlockedOnLock.dmp",
+                    DumpFile = @"..\..\..\..\ConcurrencyAnalyzers.IntegrationTests\bin\Debug\net6.0\Dumps\ParallelThreadsIntegrationTests.BlockThreadPoolThreads.dmp",
                     DiscoverThreadNames = true,
                 };
 
@@ -66,23 +66,30 @@ namespace ConcurrencyAnalyzers
 
             using (runtime.AssertNotNull())
             {
-                ThreadRegistry? threadRegistry = null;
-                if (options.DiscoverThreadNames || options.StopAfterThreadNameDiscovery)
-                {
-                    threadRegistry = ThreadRegistry.Create(runtime.Runtime, options.DegreeOfParallelism);
-                }
+                var analysisOptions = FromCommandLineOptions(options);
 
-                if (options.StopAfterThreadNameDiscovery)
-                {
-                    // The goal of this invocation was to discover threads.
-                    return Unit.VoidSuccess;
-                }
-
-                var parallelThreads = ConcurrencyAnalyzer.AnalyzeParallelThreads(runtime.Runtime, threadRegistry);
+                var analysisResult = ConcurrencyAnalyzer.Analyze(analysisOptions, runtime.Runtime);
                 var render = CreateRenderer(options);
-                render.Render(parallelThreads);
+                render.Render(analysisResult);
 
                 return Unit.VoidSuccess;
+            }
+
+            static AnalysisOptions FromCommandLineOptions(VerbOptions options)
+            {
+                AnalysisScope scope = AnalysisScope.None;
+
+                if (options.DiscoverThreadNames || options.StopAfterThreadNameDiscovery)
+                {
+                    scope |= AnalysisScope.Threads;
+                }
+
+                if (!options.StopAfterThreadNameDiscovery)
+                {
+                    scope |= (AnalysisScope.ParallelThreads | AnalysisScope.ThreadPool);
+                }
+
+                return new AnalysisOptions(scope, options.DegreeOfParallelism);
             }
 
             static CacheOptions DisabledCacheOptions() => new CacheOptions()

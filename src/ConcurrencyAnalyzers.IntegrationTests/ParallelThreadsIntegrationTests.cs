@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ConcurrencyAnalyzers.ParallelThreadsAnalysis;
+using ConcurrencyAnalyzers.Utilities;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,9 +24,23 @@ namespace ConcurrencyAnalyzers.IntegrationTests
         public async Task ParallelForBlockedOnLock(bool useDumpFile)
         {
             int threadCount = 42;
-            var parallelThreads = await AnalyzeTestCase(
+            var analysisResult = await AnalyzeTestCase(
                 useDumpFile,
                 token => ParallelForBlockedOnLockCase.Run(threadCount, token).GetAwaiter().GetResult());
+            LogToOutput(analysisResult);
+
+            AssertNoStrangeNameInStackTraces(analysisResult);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task BlockThreadPoolThreads(bool useDumpFile)
+        {
+            int threadCount = 42;
+            var parallelThreads = await AnalyzeTestCase(
+                useDumpFile,
+                token => BlockThreadPoolThreadsCase.Run(threadCount).GetAwaiter().GetResult());
             LogToOutput(parallelThreads);
 
             AssertNoStrangeNameInStackTraces(parallelThreads);
@@ -52,11 +66,13 @@ namespace ConcurrencyAnalyzers.IntegrationTests
                 => ExceptionInsideTheLockCase.BlockingMethodWithLockAndException(exception, token);
         }
 
-        static void AssertNoStrangeNameInStackTraces(ParallelThreads parallelThreads)
+        static void AssertNoStrangeNameInStackTraces(AnalysisResult result)
         {
             // Checking that the following set of symbols is not present in stack traces:
             string[] invalidSubStrings = new[] { ".<", ".>", "<>", "`", "|" };
-            foreach (var stackTrace in parallelThreads.GroupedThreads.SelectMany(pt => pt.ThreadInfo.StackFrames))
+            var threads = result.ParallelThreads.AssertNotNull().AssertSuccess();
+
+            foreach (var stackTrace in threads.GroupedThreads.SelectMany(pt => pt.ThreadInfo.StackFrames))
             {
                 stackTrace.Signature.Should().NotContainAny(invalidSubStrings);
             }
