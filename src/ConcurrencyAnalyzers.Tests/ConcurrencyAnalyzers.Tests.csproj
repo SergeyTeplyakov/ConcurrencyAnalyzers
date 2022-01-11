@@ -20,4 +20,8 @@
     <ProjectReference Include="..\ConcurrencyAnalyzers\ConcurrencyAnalyzers.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Rendering\" />
+  </ItemGroup>
+
 </Project>

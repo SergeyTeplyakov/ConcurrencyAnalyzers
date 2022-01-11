@@ -1,22 +1,40 @@
-﻿using System.Diagnostics;
+﻿using System.Diagnostics.ContractsLight;
+using System.Runtime.CompilerServices;
 
 namespace ConcurrencyAnalyzers.Utilities
 {
     public static class ResultExtensions
     {
-        public static void ThrowIfFailure<TResult>(this TResult result) where TResult : IResult
+        public static void ThrowIfFailure<TResult>(this TResult result, [CallerArgumentExpression("result")] string resultExpression = "") where TResult : IResult
         {
             if (!result.Success)
             {
-                throw new UnsuccessfulResultException(result.ErrorMessage);
+                string message = GetFullErrorMessage(result, resultExpression);
+                throw new UnsuccessfulResultException(message);
             }
         }
 
-        public static T GetValueOrThrow<T>(this Result<T> result)
+        private static string GetFullErrorMessage<TResult>(TResult result, string resultExpression) where TResult : IResult
         {
-            result.ThrowIfFailure();
+            return $"Expression '{resultExpression}' produced unsuccessful result: {result.ErrorMessage}";
+        }
 
-            Debug.Assert(result.Success);
+        public static T GetValueOrThrow<T>(this Result<T> result, [CallerArgumentExpression("result")] string resultExpression = "")
+        {
+            result.ThrowIfFailure(resultExpression);
+
+            Contract.Assert(result.Success);
+            return result.Value;
+        }
+
+        public static T AssertSuccess<T>(this Result<T> result,
+            [CallerArgumentExpression("result")] string resultExpression = "")
+        {
+            if (!result.Success)
+            {
+                Contract.Assert(false, GetFullErrorMessage(result, resultExpression));
+            }
+
             return result.Value;
         }
     }

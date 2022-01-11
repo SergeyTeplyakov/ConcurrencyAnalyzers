@@ -13,6 +13,13 @@ namespace ConcurrencyAnalyzers.Utilities
             return instance;
         }
 
+        public static T AssertNotNull<T>([NotNull] this T? instance,
+            [CallerArgumentExpression("instance")] string instanceCreationExpression = "") where T : struct
+        {
+            Contract.Assert(instance is not null, userMessage: instanceCreationExpression);
+            return instance.Value;
+        }
+
         public static T RequiresNotNull<T>([NotNull] this T? instance,
             [CallerArgumentExpression("instance")] string instanceCreationExpression = "")
         {

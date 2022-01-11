@@ -19,7 +19,8 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
 
     public record ExceptionObject(string TypeName, string? Message);
 
-    public record ThreadInfo(StackFrame[] StackFrames, string[] RawStackFrames, ThreadId ThreadId, ExceptionObject? Exception, LockCount LockCount);
+    public record ThreadInfo(StackFrame[] StackFrames, string[] RawStackFrames, ThreadId ThreadId,
+        ExceptionObject? Exception, LockCount LockCount);
 
     /// <summary>
     /// A lightweight wrapper that represents the lock count.
@@ -112,7 +113,11 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
                         exception,
                         new LockCount(thread.LockCount));
 
-                    threads.Add(threadInfo);
+                    // Skipping the threads with no managed stack traces
+                    if (threadInfo.StackFrames.Length > 0)
+                    {
+                        threads.Add(threadInfo);
+                    }
                 }
             }
 
@@ -145,7 +150,20 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
             // This is still may not be the final thing, but can be close.
             var threadInfoHashCodeGroup = threadInfos.ToMultiDictionary(ti => ti, ti => ti, ThreadInfoEqualityComparer.Instance);
 
-            return threadInfoHashCodeGroup.Select(kvp => Create(kvp.Value)!).Where(r => r != null).ToArray();
+            return threadInfoHashCodeGroup
+                .Select(kvp => Create(kvp.Value)!)
+                .Where(r => r != null)
+                // Sorting from the groups with the most number of threads down.
+                .OrderByDescending(g => GetThreadCount(g))
+                .ToArray();
+
+            static int GetThreadCount(ParallelThread thread) =>
+                thread switch
+                {
+                    GroupedParallelThread groupedParallelThread => groupedParallelThread.GroupedThreads.Length,
+                    SingleParallelThread => 1,
+                    _ => throw new ArgumentOutOfRangeException(nameof(thread))
+                };
         }
 
         protected static string ThreadInfoToString(ThreadInfo threadInfo) => string.Join(Environment.NewLine,

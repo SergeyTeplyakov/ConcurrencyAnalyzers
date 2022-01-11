@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ConcurrencyAnalyzers.IntegrationTests.Utils;
-using ConcurrencyAnalyzers.ParallelThreadsAnalysis;
 using ConcurrencyAnalyzers.Rendering;
 using ConcurrencyAnalyzers.Utilities;
 
@@ -19,22 +18,23 @@ namespace ConcurrencyAnalyzers.IntegrationTests
         {
         }
 
-        private static ParallelThreads GetParallelThreadsForCurrentProcess()
+        private static AnalysisResult AnalyzeCurrentProcess()
         {
             int processId = Process.GetCurrentProcess().Id;
             using TargetWithRuntime targetWithRuntime = ConcurrencyAnalyzer.AttachTo(processId).GetValueOrThrow();
-            var threadRegistry = ThreadRegistry.Create(targetWithRuntime.Runtime, degreeOfParallelism: null);
-            return ConcurrencyAnalyzer.AnalyzeParallelThreads(targetWithRuntime.Runtime, threadRegistry);
+
+            var analysisOptions = new AnalysisOptions(AnalysisScope.All, DegreeOfParallelism: Environment.ProcessorCount);
+            return ConcurrencyAnalyzer.Analyze(analysisOptions, targetWithRuntime.Runtime);
         }
 
-        private static ParallelThreads GetParallelThreadsFromDumpFile(string dumpFile)
+        private static AnalysisResult AnalyzeDumpFile(string dumpFile)
         {
             using TargetWithRuntime targetWithRuntime = ConcurrencyAnalyzer.OpenDump(dumpFile).GetValueOrThrow();
-            var threadRegistry = ThreadRegistry.Create(targetWithRuntime.Runtime, Environment.ProcessorCount);
-            return ConcurrencyAnalyzer.AnalyzeParallelThreads(targetWithRuntime.Runtime, threadRegistry);
+            var analysisOptions = new AnalysisOptions(AnalysisScope.All, DegreeOfParallelism: Environment.ProcessorCount);
+            return ConcurrencyAnalyzer.Analyze(analysisOptions, targetWithRuntime.Runtime);
         }
 
-        protected static void LogToOutput(ParallelThreads parallelThreads, bool renderRawStackFrames = false)
+        protected static void LogToOutput(AnalysisResult parallelThreads, bool renderRawStackFrames = false)
         {
             var consoleRenderer = new ConsoleRenderer(renderRawStackFrames);
             consoleRenderer.Render(parallelThreads);
@@ -67,7 +67,7 @@ namespace ConcurrencyAnalyzers.IntegrationTests
             }
         }
 
-        protected async Task<ParallelThreads> AnalyzeWithMemoryDumpAsync(
+        protected async Task<AnalysisResult> AnalyzeWithMemoryDumpAsync(
             Action<CancellationToken> stateEstablishing,
             [CallerMemberName] string testCaseName = "")
         {
@@ -76,10 +76,10 @@ namespace ConcurrencyAnalyzers.IntegrationTests
 
             await GenerateDumpFileIfNeeded(dumpFile, stateEstablishing);
 
-            return GetParallelThreadsFromDumpFile(dumpFile);
+            return AnalyzeDumpFile(dumpFile);
         }
 
-        protected static async Task<ParallelThreads> AnalyzeForCurrentProcessAsync(
+        protected static async Task<AnalysisResult> AnalyzeForCurrentProcessAsync(
             Action<CancellationToken> stateEstablishing)
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
@@ -91,7 +91,7 @@ namespace ConcurrencyAnalyzers.IntegrationTests
             // A small delay to block the execution.
             await Task.Delay(400);
 
-            var result = GetParallelThreadsForCurrentProcess();
+            var result = AnalyzeCurrentProcess();
 
             // Need to await the task produced by the callback, because it is responsible for the cleanup.
             await task;
@@ -99,7 +99,7 @@ namespace ConcurrencyAnalyzers.IntegrationTests
             return result;
         }
 
-        protected Task<ParallelThreads> AnalyzeTestCase(
+        protected Task<AnalysisResult> AnalyzeTestCase(
             bool useDumpFile,
             Action<CancellationToken> stateEstablishing,
             [CallerMemberName] string testCaseName = "")
