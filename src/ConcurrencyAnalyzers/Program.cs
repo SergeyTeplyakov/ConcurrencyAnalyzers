@@ -7,13 +7,64 @@ using ConcurrencyAnalyzers.Rendering;
 using ConcurrencyAnalyzers.Utilities;
 
 using Microsoft.Diagnostics.Runtime;
+using Microsoft.Extensions.Logging;
 
 namespace ConcurrencyAnalyzers
 {
+    public class Foo
+    {
+
+    }
     internal class Program
     {
+
+        //private static void TestLogging()
+        //{
+        //    LoggerFactory.Create()
+
+        //}
         static void Main(string[] args)
         {
+            //string? s = null;
+
+
+            //s ??= "12";
+
+            //string s2 = s;
+
+            //Foo foo;
+            //if (args == null)
+            //{
+            //    foo = new Foo();
+            //}
+            //else
+            //{
+            //    foo = null;
+            //}
+
+            //// A warning! I was expecting only a warning on 'foo = null'
+            //Foo bar = foo;
+
+
+
+
+            //Console.WriteLine(foo);
+            //Foo? bar;
+
+            //for (int i = 0; i < 1000; i++)
+            //{
+            //    foo = new Foo();
+            //    bar = new Foo();
+            //}
+
+            //// tooltip: 'foo' is not null here
+            //Console.WriteLine(foo);
+            //// tooltip: 'bar' may be null here
+            //Console.WriteLine(bar);
+
+            //TestLogging();
+            //return;
+
             if (args.Length == 0)
             {
                 // A local testing scenario. Will work if the integration tests ran at least once.
@@ -43,6 +94,8 @@ namespace ConcurrencyAnalyzers
             // Error case.
             Console.WriteLine(HelpText.AutoBuild(parsedArguments));
         }
+
+        
 
         /// <summary>
         /// Run the analyzer for a given <paramref name="options"/>.
