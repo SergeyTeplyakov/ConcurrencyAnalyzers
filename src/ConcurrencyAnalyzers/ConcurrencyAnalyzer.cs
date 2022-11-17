@@ -13,7 +13,7 @@ namespace ConcurrencyAnalyzers
     /// <summary>
     /// A type-safe pair of <see cref="DataTarget"/> and <see cref="ClrRuntime"/>.
     /// </summary>
-    public record class TargetWithRuntime(DataTarget Target, ClrRuntime Runtime) : IDisposable
+    public record TargetWithRuntime(DataTarget Target, ClrRuntime Runtime) : IDisposable
     {
         public void Dispose()
         {

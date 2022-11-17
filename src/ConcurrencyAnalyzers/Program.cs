@@ -23,7 +23,14 @@ namespace ConcurrencyAnalyzers
                     DiscoverThreadNames = true,
                 };
 
-                Analyze(dumpFileOptions);
+                var result = Analyze(dumpFileOptions);
+
+                if (!result.Success)
+                {
+                    Console.WriteLine(result);
+                }
+
+
                 return;
             }
 

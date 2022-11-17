@@ -67,7 +67,13 @@ namespace ConcurrencyAnalyzers
             // whether the managed thread pool implementation was used or not.
             if (_coreLib.Value is { } coreLib)
             {
-                var threadPoolType = coreLib.GetTypeByName("System.Threading.ThreadPool").AssertNotNull();
+                var threadPoolType = coreLib.GetTypeByName("System.Threading.ThreadPool");
+
+                if (threadPoolType is null)
+                {
+                    return false;
+                }
+
                 bool? isWorkerTrackingEnabledInConfig = threadPoolType.GetStaticFieldByName("UsePortableThreadPool").TryGetValue<bool>(_runtime);
                 return isWorkerTrackingEnabledInConfig == true;
             }

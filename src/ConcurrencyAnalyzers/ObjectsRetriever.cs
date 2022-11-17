@@ -137,7 +137,7 @@ namespace ConcurrencyAnalyzers
 
             void StartReporter(CancellationToken token)
             {
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
                     long previousDiscoveredObjectsCount = Interlocked.Read(ref instanceCount);

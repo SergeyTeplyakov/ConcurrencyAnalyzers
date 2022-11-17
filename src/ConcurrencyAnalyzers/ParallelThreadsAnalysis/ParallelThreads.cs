@@ -154,7 +154,7 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
                 .Select(kvp => Create(kvp.Value)!)
                 .Where(r => r != null)
                 // Sorting from the groups with the most number of threads down.
-                .OrderByDescending(g => GetThreadCount(g))
+                .OrderByDescending(GetThreadCount)
                 .ToArray();
 
             static int GetThreadCount(ParallelThread thread) =>

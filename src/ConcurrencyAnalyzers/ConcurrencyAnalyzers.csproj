@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<DebugType>embedded</DebugType>
 		<Nullable>enable</Nullable>
@@ -10,6 +10,7 @@
 		<!--Using Server GC because it gives a better throughput for the apps like this one.-->
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+		<AnalysisLevel>latest-all</AnalysisLevel>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -22,8 +23,16 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommandLineParser" Version="2.8.0" />
+		<PackageReference Include="ErrorProne.NET.CoreAnalyzers" Version="0.4.0-beta.1">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.Diagnostics.Runtime" Version="2.0.226801" />
-		<PackageReference Include="RuntimeContracts" Version="0.3.1" />
+		<PackageReference Include="RuntimeContracts" Version="0.4.0" />
+		<PackageReference Include="RuntimeContracts.Analyzer" Version="0.4.3">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 </Project>
