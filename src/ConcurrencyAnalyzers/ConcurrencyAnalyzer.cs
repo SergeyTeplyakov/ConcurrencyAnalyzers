@@ -155,7 +155,6 @@ namespace ConcurrencyAnalyzers
             }
         }
 
-
         public static ParallelThreads AnalyzeParallelThreads(ClrRuntime runtime, ThreadRegistry? threadRegistry)
         {
             return ParallelThreads.Create(runtime, threadRegistry);
@@ -209,7 +208,5 @@ namespace ConcurrencyAnalyzers
         public Result<ParallelThreads>? ParallelThreads { get; set; }
         public Result<ThreadPoolStats>? ThreadPoolStats { get; set; }
     }
-
-
 }
 

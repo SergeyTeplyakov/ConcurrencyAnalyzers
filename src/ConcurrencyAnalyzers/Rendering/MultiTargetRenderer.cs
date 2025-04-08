@@ -13,6 +13,8 @@ namespace ConcurrencyAnalyzers.Rendering
 
         public override void Dispose()
         {
+            base.Dispose();
+
             foreach (var renderer in _renderers)
             {
                 renderer.Dispose();
@@ -39,7 +41,7 @@ namespace ConcurrencyAnalyzers.Rendering
             return result;
         }
 
-        private class NullTextWriter : TextWriter
+        private sealed class NullTextWriter : TextWriter
         {
             public override Encoding Encoding => Encoding.UTF8;
         }

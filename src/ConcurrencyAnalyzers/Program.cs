@@ -10,7 +10,7 @@ using Microsoft.Diagnostics.Runtime;
 
 namespace ConcurrencyAnalyzers
 {
-    internal class Program
+    internal sealed class Program
     {
         static void Main(string[] args)
         {
@@ -29,7 +29,6 @@ namespace ConcurrencyAnalyzers
                 {
                     Console.WriteLine(result);
                 }
-
 
                 return;
             }
