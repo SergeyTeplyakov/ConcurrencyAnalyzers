@@ -45,7 +45,9 @@ namespace ConcurrencyAnalyzers.Rendering
         private readonly int _maxWidth;
         private readonly string _separatorLine;
 
+#pragma warning disable CA1051 // Do not declare visible instance fields
         protected readonly TextWriter Writer;
+#pragma warning restore CA1051 // Do not declare visible instance fields
         private readonly bool _renderRawStackFrames;
 
         public TextRenderer(TextWriter writer, bool renderRawStackFrames = false, int maxWidth = MaxWidth)
@@ -56,7 +58,10 @@ namespace ConcurrencyAnalyzers.Rendering
             _separatorLine = new string('-', _maxWidth);
         }
 
-        public virtual void Dispose() { }
+        public virtual void Dispose()
+        {
+            Writer.Dispose();
+        }
 
         public void Render(AnalysisResult result)
         {

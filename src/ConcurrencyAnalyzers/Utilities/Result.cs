@@ -89,7 +89,9 @@ namespace ConcurrencyAnalyzers.Utilities
             return "Failure: " + _error;
         }
 
+#pragma warning disable CA1000 // Do not declare static members on generic types
         public static Result<T> FromError<U>(Result<U> other)
+#pragma warning restore CA1000 // Do not declare static members on generic types
         {
             Contract.Requires(!other.Success);
             return new Result<T>(other.ErrorMessage);

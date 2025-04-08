@@ -10,7 +10,7 @@ using Microsoft.Diagnostics.Runtime;
 
 namespace ConcurrencyAnalyzers
 {
-    internal class Program
+    internal sealed class Program
     {
         static void Main(string[] args)
         {
@@ -23,7 +23,13 @@ namespace ConcurrencyAnalyzers
                     DiscoverThreadNames = true,
                 };
 
-                Analyze(dumpFileOptions);
+                var result = Analyze(dumpFileOptions);
+
+                if (!result.Success)
+                {
+                    Console.WriteLine(result);
+                }
+
                 return;
             }
 

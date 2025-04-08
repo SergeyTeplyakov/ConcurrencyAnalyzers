@@ -48,14 +48,6 @@ namespace ConcurrencyAnalyzers
                 throw new InvalidOperationException($"Can't walk the heap!");
             }
 
-            Console.WriteLine($"Discovering ClrThreads with {_degreeOfParallelism} threads...");
-
-            IHeapHelpers? helpers = TryGetHeapHelpers(runtime);
-            if (helpers is not null)
-            {
-                return EnumerateThreadsFast(runtime, helpers);
-            }
-
             // Re-using 'EnumerateObjectsCore' for reporting purposes.
             return EnumerateObjectsCore(
                 sequence: new[] { Unit.Void },
@@ -137,7 +129,7 @@ namespace ConcurrencyAnalyzers
 
             void StartReporter(CancellationToken token)
             {
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     var periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
                     long previousDiscoveredObjectsCount = Interlocked.Read(ref instanceCount);
@@ -153,72 +145,18 @@ namespace ConcurrencyAnalyzers
                             _reportProgress?.Invoke(new EnumerateObjectsProgress(currentCount, rate, Interlocked.Read(ref relevantInstanceCount)));
                         }
                     }
-                });
+                }, token);
             }
         }
-
-        private IEnumerable<ClrObject> EnumerateThreadsFast(ClrRuntime runtime, IHeapHelpers helpers)
-        {
-            var success = helpers.CreateSegments(runtime.Heap, out _, out _, out _, out var fqObjects);
-
-            // TODO: trace unsuccessful case!
-            if (!success)
-            {
-                throw new InvalidOperationException($"Can't get finalizer queue segments.");
-            }
-
-            Console.WriteLine($"CreateSegments: {success}, Finalizer queue segments count: {fqObjects.Length}");
-
-            return EnumerateObjectsCore(
-                fqObjects,
-                ReadObjectsFromFinalizerQueueSegment,
-                clrInstance => clrInstance.Type?.Name == "System.Threading.Thread");
-
-            IEnumerable<ClrObject> ReadObjectsFromFinalizerQueueSegment(FinalizerQueueSegment seg)
-            {
-                for (ulong ptr = seg.Start; ptr < seg.End; ptr += (uint)IntPtr.Size)
-                {
-                    ulong obj = helpers.DataReader.ReadPointer(ptr);
-                    if (obj == 0)
-                    {
-                        continue;
-                    }
-
-                    ulong mt = helpers.DataReader.ReadPointer(obj);
-                    ClrType? type = helpers.Factory.GetOrCreateType(mt, obj);
-                    yield return new ClrObject(obj, type);
-                }
-            }
-        }
-
-        private static IHeapHelpers? TryGetHeapHelpers(ClrRuntime runtime)
-        {
-            try
-            {
-                // A hacky way of getting 'IHeapHelpers'. This is the only way I've found so far.
-                var heap = runtime.Heap;
-                var helpersField = heap.GetType().GetField("_helpers", BindingFlags.Instance | BindingFlags.NonPublic);
-                var result = (IHeapHelpers)helpersField!.GetValue(heap)!;
-                return result;
-            }
-            catch (Exception ex)
-            {
-                // TODO: trace properly.
-                Console.WriteLine($"Failed getting IHeapHelpers: {ex}");
-                return null;
-            }
-        }
-
         public IEnumerable<ClrObject> EnumerateObjects(
             ClrRuntime runtime,
             Func<ClrObject, bool> predicate)
         {
+            runtime.AssertNotNull();
             // TODO: still checking if parallel processing is worth it! It seems that on hdd it gives the same results actually!
             if (!runtime.IsThreadSafe)
             {
                 throw new InvalidOperationException("Parallel enumeration is not possible. runtime.IsThreadSafe is false.");
-                // The runtime is not thread-safe.
-                // return runtime.Heap.EnumerateObjects();
             }
 
             if (!runtime.Heap.CanWalkHeap)

@@ -37,12 +37,7 @@ namespace ConcurrencyAnalyzers.Rendering
 
         private static ConsoleColor GetFragmentColor(FragmentKind kind)
         {
-            if (s_fragmentColors.TryGetValue(kind, out var result))
-            {
-                return result;
-            }
-
-            return ConsoleColor.White;
+            return s_fragmentColors.GetValueOrDefault(kind, ConsoleColor.White);
         }
     }
 }

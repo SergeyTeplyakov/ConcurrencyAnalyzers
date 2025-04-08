@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcurrencyAnalyzers.Utilities
 {
-    public static class Contracts
+    public static class Assertions
     {
         public static T AssertNotNull<T>([NotNull] this T? instance,
             [CallerArgumentExpression("instance")] string instanceCreationExpression = "")

@@ -67,7 +67,13 @@ namespace ConcurrencyAnalyzers
             // whether the managed thread pool implementation was used or not.
             if (_coreLib.Value is { } coreLib)
             {
-                var threadPoolType = coreLib.GetTypeByName("System.Threading.ThreadPool").AssertNotNull();
+                var threadPoolType = coreLib.GetTypeByName("System.Threading.ThreadPool");
+
+                if (threadPoolType is null)
+                {
+                    return false;
+                }
+
                 bool? isWorkerTrackingEnabledInConfig = threadPoolType.GetStaticFieldByName("UsePortableThreadPool").TryGetValue<bool>(_runtime);
                 return isWorkerTrackingEnabledInConfig == true;
             }
@@ -131,7 +137,7 @@ namespace ConcurrencyAnalyzers
         /// <remarks>
         /// This is a copy of the struct from dotnet/runtime repository.
         /// </remarks>
-        private struct ThreadCounts
+        private record struct ThreadCounts
         {
             // SOS's ThreadPool command depends on this layout
             private const byte NumProcessingWorkShift = 0;
@@ -161,10 +167,6 @@ namespace ConcurrencyAnalyzers
             /// </summary>
             public short NumThreadsGoal => GetInt16Value(NumThreadsGoalShift);
 
-            public static bool operator ==(ThreadCounts lhs, ThreadCounts rhs) => lhs._data == rhs._data;
-            public static bool operator !=(ThreadCounts lhs, ThreadCounts rhs) => lhs._data != rhs._data;
-
-            public override bool Equals([NotNullWhen(true)] object? obj) => obj is ThreadCounts other && _data == other._data;
             public override int GetHashCode() => (int)_data + (int)(_data >> 32);
         }
     }

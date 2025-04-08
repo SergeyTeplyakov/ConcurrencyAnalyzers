@@ -28,7 +28,7 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
     /// <remarks>
     /// It seems that lock count is not supported for .net core processes!
     /// </remarks>
-    public readonly struct LockCount
+    public readonly record struct LockCount
     {
         private readonly int _count;
 
@@ -84,6 +84,8 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
 
         public static ParallelThreads Create(ClrRuntime runtime, IThreadRegistry? threadRegistry = null)
         {
+            runtime.AssertNotNull();
+
             var threads = new List<ThreadInfo>();
 
             foreach (var thread in runtime.Threads)
@@ -143,6 +145,7 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
 
         public static ParallelThread[] Group(IEnumerable<ThreadInfo> threadInfos)
         {
+            threadInfos.AssertNotNull();
             // Grouping is quite naive.
             // We check that the entire stack traces are exactly the same.
 
@@ -154,7 +157,7 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
                 .Select(kvp => Create(kvp.Value)!)
                 .Where(r => r != null)
                 // Sorting from the groups with the most number of threads down.
-                .OrderByDescending(g => GetThreadCount(g))
+                .OrderByDescending(GetThreadCount)
                 .ToArray();
 
             static int GetThreadCount(ParallelThread thread) =>
@@ -179,7 +182,7 @@ namespace ConcurrencyAnalyzers.ParallelThreadsAnalysis
             };
         }
 
-        private class ThreadInfoEqualityComparer : IEqualityComparer<ThreadInfo>
+        private sealed class ThreadInfoEqualityComparer : IEqualityComparer<ThreadInfo>
         {
             public static ThreadInfoEqualityComparer Instance { get; } = new ThreadInfoEqualityComparer();
             public bool Equals(ThreadInfo? x, ThreadInfo? y)

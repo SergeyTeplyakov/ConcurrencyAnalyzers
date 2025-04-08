@@ -13,7 +13,7 @@ namespace ConcurrencyAnalyzers
     /// <summary>
     /// A type-safe pair of <see cref="DataTarget"/> and <see cref="ClrRuntime"/>.
     /// </summary>
-    public record class TargetWithRuntime(DataTarget Target, ClrRuntime Runtime) : IDisposable
+    public record TargetWithRuntime(DataTarget Target, ClrRuntime Runtime) : IDisposable
     {
         public void Dispose()
         {
@@ -155,7 +155,6 @@ namespace ConcurrencyAnalyzers
             }
         }
 
-
         public static ParallelThreads AnalyzeParallelThreads(ClrRuntime runtime, ThreadRegistry? threadRegistry)
         {
             return ParallelThreads.Create(runtime, threadRegistry);
@@ -209,7 +208,5 @@ namespace ConcurrencyAnalyzers
         public Result<ParallelThreads>? ParallelThreads { get; set; }
         public Result<ThreadPoolStats>? ThreadPoolStats { get; set; }
     }
-
-
 }
 
